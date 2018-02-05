@@ -1,0 +1,22 @@
+{
+  "name": "raslack",
+  "version": "1.0.5",
+  "description": "ability to simple send slack messages via webhook",
+  "main": "raslack",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ra",
+    "slack"
+  ],
+  "author": "metarobert",
+  "license": "ISC",
+  "dependencies": {
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2"
+  },
+  "bin": {
+    "raslack": "raslack"
+  }
+}

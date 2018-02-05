@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+const fs = require ('fs');
+const os = require ('os');
+const rp = require ('request-promise');
+
+let text = process.argv[2] || 'no message was passed to send to Slack, so you got this.'
+let configFilePath = `${os.homedir()}/.slack/slackConfig.json`;
+
+try {
+    url = JSON.parse (fs.readFileSync (configFilePath).toString ()).webHookUrl
+} catch (e) {
+    console.error(`Caught an error trying to open and parse your config file at ${configFilePath}`)
+    console.error(e);
+    process.exit(-1);
+}
+
+let sOptions = {
+    method: 'POST',
+    url: url,
+    body: {
+        text: text
+    },
+    json: true
+};
+
+rp.post (sOptions)
+    .then ( (response) => {
+        console.log (`Slack Response: ${response}`);
+    })
+    .catch ( (error) => {
+        console.log (`Slack ERROR: ${error}`);
+    });
