@@ -1,32 +1,58 @@
 #!/usr/bin/env node
-const fs = require ('fs');
-const os = require ('os');
-const rp = require ('request-promise');
 
-let text = process.argv[2] || 'no message was passed to send to Slack, so you got this.'
-let configFilePath = `${os.homedir()}/.slack/slackConfig.json`;
+const fs = require('fs');
+const os = require('os');
+const rp = require('request-promise');
+const argv = require('minimist')(process.argv.slice(2));
 
-try {
-    url = JSON.parse (fs.readFileSync (configFilePath).toString ()).webHookUrl
-} catch (e) {
-    console.error(`Caught an error trying to open and parse your config file at ${configFilePath}`)
-    console.error(e);
-    process.exit(-1);
+// to be the body of the POST to slack
+let body;
+
+// set either the JSON payload, or the text of the JSON payload
+if (argv.json) {
+  try {
+    body = JSON.parse(argv.json);
+    console.log(body);
+  } catch (e) {
+    console.error(`[ERROR] Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
+  }
+} else if (argv.text || argv.t) {
+  try {
+    body = { text: argv.text ? argv.text : argv.t };
+  } catch (e) {
+    console.error(`[ERROR] Caught an error processing text message\n ${e.message}`);
+  }
 }
 
+// If we fell through, past the above 'if' conditions, then we failed to set a payload for the slack POST
+if (body === undefined) {
+  console.error('You must pass, at least, text\n e.g. `raslack --text "some message"`');
+  process.exit(-1);
+}
+
+// Read our config file
+let configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
+try {
+  url = JSON.parse(fs.readFileSync(configFilePath).toString()).webHookUrl;
+} catch (e) {
+  console.error(`Caught an error trying to open and parse your config file at ${configFilePath}`);
+  console.error(e);
+  process.exit(-1);
+}
+
+// prepare options and POST to the slack webhook from the config file
 let sOptions = {
-    method: 'POST',
-    url: url,
-    body: {
-        text: text
-    },
-    json: true
+  method: 'POST',
+  url: url,
+  body: body,
+  json: true
 };
 
-rp.post (sOptions)
-    .then ( (response) => {
-        console.log (`Slack Response: ${response}`);
-    })
-    .catch ( (error) => {
-        console.log (`Slack ERROR: ${error}`);
-    });
+rp
+  .post(sOptions)
+  .then(response => {
+    console.log(`[INFO] Slack Response: ${response}`);
+  })
+  .catch(error => {
+    console.log(`[ERROR] Slack returned: ${error}`);
+  });

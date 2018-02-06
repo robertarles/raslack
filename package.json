@@ -17,6 +17,7 @@
   "author": "metarobert",
   "license": "ISC",
   "dependencies": {
+    "minimist": "^1.2.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2"
   },
