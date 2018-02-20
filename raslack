@@ -1,58 +1,89 @@
 #!/usr/bin/env node
-
 const fs = require('fs');
 const os = require('os');
 const rp = require('request-promise');
 const argv = require('minimist')(process.argv.slice(2));
+const winston = require('winston');
 
-// to be the body of the POST to slack
-let body;
+// this will be the channel and webhook pulled from the config based on the channel chosen
+let channel = undefined;
+let webhook = undefined;
+
+const logger = winston.createLogger({
+  transports: [new winston.transports.Console(), new winston.transports.File({ filename: 'raslack.log' })]
+});
+
+let raslackConfigFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
+let raslackConfig;
+loadConfig();
+let slackPostBody;
 
 // set either the JSON payload, or the text of the JSON payload
 if (argv.json) {
   try {
-    body = JSON.parse(argv.json);
-    console.log(body);
+    slackPostBody = JSON.parse(argv.json);
+    console.info(slackPostBody);
   } catch (e) {
-    console.error(`[ERROR] Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
+    logger.error(`[ERROR] Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
   }
 } else if (argv.text || argv.t) {
   try {
-    body = { text: argv.text ? argv.text : argv.t };
+    slackPostBody = { text: argv.text ? argv.text : argv.t };
   } catch (e) {
-    console.error(`[ERROR] Caught an error processing text message\n ${e.message}`);
+    logger.error(`[ERROR] Caught an error processing text message\n ${e.message}`);
   }
 }
 
 // If we fell through, past the above 'if' conditions, then we failed to set a payload for the slack POST
-if (body === undefined) {
-  console.error('You must pass, at least, text\n e.g. `raslack --text "some message"`');
-  process.exit(-1);
-}
-
-// Read our config file
-let configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
-try {
-  url = JSON.parse(fs.readFileSync(configFilePath).toString()).webHookUrl;
-} catch (e) {
-  console.error(`Caught an error trying to open and parse your config file at ${configFilePath}`);
-  console.error(e);
+if (slackPostBody === undefined) {
+  logger.error('You must pass, at least, text\n e.g. `raslack --text "some message"`');
   process.exit(-1);
 }
 
 // prepare options and POST to the slack webhook from the config file
-let sOptions = {
+let slackPostOptions = {
   method: 'POST',
-  url: url,
-  body: body,
+  url: webhook,
+  body: slackPostBody,
   json: true
 };
 
 rp
-  .post(sOptions)
+  .post(slackPostOptions)
   .then(response => {
-    console.log(`[INFO] Slack Response: ${response}`);
+    logger.info(`[INFO] Slack response from post to ${channel}: ${response}`);
   })
   .catch(error => {
-    console.log(`[ERROR] Slack returned: ${error}`);
+    logger.error(`[ERROR] Slack post to ${channel}: ${error}`);
   });
+
+/**
+ * read config from file
+ */
+function loadConfig() {
+  // load the config file, or log an error and quit
+  try {
+    raslackConfig = JSON.parse(fs.readFileSync(raslackConfigFilePath).toString());
+  } catch (e) {
+    logger.error(`Caught an error trying to open and parse your config file at ${raslackConfigFilePath}`);
+    logger.error(e);
+    process.exit(-1);
+  }
+  // load the account passed via cmd line param, or load the first in the config
+  try {
+    channel = argv.channel || raslackConfig.default_channel;
+  } catch (e) {
+    logger.error(`Caught an error trying to set a Slack channel for posting.`);
+    logger.error(e);
+    process.exit(-1);
+  }
+  // get the webhook for the chosen channel
+  try {
+    webhook = raslackConfig.channels[channel];
+  } catch (e) {
+    console.log(webhook);
+    logger.error(`Caught an exception trying to get the webhook for channel ${channel}`);
+    logger.error(e);
+    process.exit(-1);
+  }
+}
