@@ -1,6 +1,6 @@
 {
   "name": "raslack",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "ability to simple send slack messages via webhook",
   "main": "raslack",
   "scripts": {
