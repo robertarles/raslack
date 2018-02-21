@@ -22,7 +22,6 @@ let slackPostBody;
 if (argv.json) {
   try {
     slackPostBody = JSON.parse(argv.json);
-    console.info(slackPostBody);
   } catch (e) {
     logger.error(`[ERROR] Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
   }
@@ -32,6 +31,9 @@ if (argv.json) {
   } catch (e) {
     logger.error(`[ERROR] Caught an error processing text message\n ${e.message}`);
   }
+
+  slackPostBody.username = 'raslack';
+  slackPostBody.icon_emoji = ':gear:';
 }
 
 // If we fell through, past the above 'if' conditions, then we failed to set a payload for the slack POST
