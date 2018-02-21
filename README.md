@@ -4,7 +4,7 @@ Requirements:
 
 * A slack webhook. Don't have one? Register a 'slack app' and a web hook here https://api.slack.com/apps
 * Put the webhook url in the config file here: ~/.raslack/slackconfig.json
-* The config file must be valid json that looks like this:
+* The config file must be valid json that looks like this: (format WILL change)
 
 ```json
 {
@@ -22,8 +22,8 @@ install
 
 then run
 
-`raslack 'some silly-ass message'`
+`raslack --text 'some silly-ass message' [--channel someAccount_general]`
 
 or a json payload (message format docs her https://api.slack.com/incoming-webhooks and here https://api.slack.com/incoming-webhooks)
 
-`raslack '{"text":"I am Pard *the monkey*, _please bend your knee_","username":"pard", "icon_emoji": ":monkey_face:", "channel": "general", "mrkdwn": true}'`
+`raslack --json '{"text":"I am Pard *the monkey*, _please bend your knee_","username":"pard", "icon_emoji": ":monkey_face:", "channel": "general", "mrkdwn": true}'`
