@@ -8,7 +8,11 @@ Requirements:
 
 ```json
 {
-  "webHookUrl": "https://[yourwebhookurl]"
+  "default_channel": "someAccount_general",
+  "channels": {
+    "someAccount_general": "yourWebHookUrl",
+    "someOtherAccount_alerts": "anotherWebHookUrl"
+  }
 }
 ```
 
@@ -22,4 +26,4 @@ then run
 
 or a json payload (message format docs her https://api.slack.com/incoming-webhooks and here https://api.slack.com/incoming-webhooks)
 
-`./raslack '{"text":"I am Pard *the monkey*, _please bend your knee_","username":"pard", "icon_emoji": ":monkey_face:", "channel": "general", "mrkdwn": true}'`
+`raslack '{"text":"I am Pard *the monkey*, _please bend your knee_","username":"pard", "icon_emoji": ":monkey_face:", "channel": "general", "mrkdwn": true}'`
