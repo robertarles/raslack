@@ -8,11 +8,26 @@ Requirements:
 
 ```json
 {
-  "default_channel": "someAccount_general",
-  "channels": {
-    "someAccount_general": "yourWebHookUrl",
-    "someOtherAccount_alerts": "anotherWebHookUrl"
-  }
+    "default_channel": "anAccountName.general",
+    "accounts": {
+        "anAccountName": {
+            "default_channel": "general",
+            "icon_emoji": "planned, unused",
+            "username": "planned, unused",
+            "channels": {
+                "general": "https://yourwebhooktochannel"
+            }
+        },
+        "myOtherAccountName": {
+            "default_channel": "myFunnestChannel",
+            "icon_emoji": "planned, unused",
+            "username": "planned, unused",
+            "channels": {
+                "myFunChannel": "https://yourwebhooktochannel",
+                "myFunnestChannel": "https://yourwebhooktochannel"
+            }
+        }
+    }
 }
 ```
 

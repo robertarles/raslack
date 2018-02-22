@@ -1,51 +1,78 @@
 #!/usr/bin/env node
+
+'use strict';
 const fs = require('fs');
 const os = require('os');
 const rp = require('request-promise');
 const argv = require('minimist')(process.argv.slice(2));
-const winston = require('winston');
 
-// this will be the channel and webhook pulled from the config based on the channel chosen
-let channel = undefined;
-let webhook = undefined;
 
-const logger = winston.createLogger({
-  transports: [new winston.transports.Console(), new winston.transports.File({ filename: 'raslack.log' })]
-});
+let helpMessage = `
+--channel | -c    account and channel to send to. e.g. accountNema.channelName
+--text    | -t    the text of the slack message to send
+--json            text representation of a slack message body to send. See slack docs for format
+--help    | -g    this help message.
+`
+if (argv.help || argv.h) {
+  console.log(helpMessage);
+  process.exit(0);
+}
 
-let raslackConfigFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
-let raslackConfig;
-loadConfig();
-let slackPostBody;
+const {
+  loadConfig
+} = require('./utils/config');
+const {
+  log
+} = require('./utils/logger');
+
+let channel;
+try {
+  channel = argv.channel ? argv.channel : argv.c;
+} catch (e) {
+  log.error(`Failed getting account and channel for posting. Did you pass them?\n ${e}`);
+  process.exit(-1);
+}
+
+// load the config file
+let configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
+let config = loadConfig(configFilePath, channel);
+
+let slackPostBody = {};
 
 // set either the JSON payload, or the text of the JSON payload
 if (argv.json) {
   try {
     slackPostBody = JSON.parse(argv.json);
   } catch (e) {
-    logger.error(`[ERROR] Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
+    log.error(`Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
+    process.exit(-1);
   }
 } else if (argv.text || argv.t) {
   try {
-    slackPostBody = { text: argv.text ? argv.text : argv.t };
+    slackPostBody = {
+      text: argv.text ? argv.text : argv.t
+    };
   } catch (e) {
-    logger.error(`[ERROR] Caught an error processing text message\n ${e.message}`);
+    log.error(`Caught an error processing text message\n ${e.message}`);
+    process.exit(-1);
   }
-
-  slackPostBody.username = 'raslack';
-  slackPostBody.icon_emoji = ':gear:';
 }
 
 // If we fell through, past the above 'if' conditions, then we failed to set a payload for the slack POST
 if (slackPostBody === undefined) {
-  logger.error('You must pass, at least, text\n e.g. `raslack --text "some message"`');
+  log.error('You must pass, at least, text\n e.g. `raslack --text "some message"`');
   process.exit(-1);
 }
+
+// set some defaults
+if (!slackPostBody.username) slackPostBody.username = 'raslack';
+if (!slackPostBody.icon_emoji) slackPostBody.icon_emoji = ':gear:';
+
 
 // prepare options and POST to the slack webhook from the config file
 let slackPostOptions = {
   method: 'POST',
-  url: webhook,
+  url: config.webhook,
   body: slackPostBody,
   json: true
 };
@@ -53,39 +80,8 @@ let slackPostOptions = {
 rp
   .post(slackPostOptions)
   .then(response => {
-    logger.info(`[INFO] Slack response from post to ${channel}: ${response}`);
+    log.info(`Slack response from post to ${config.slackChannel}: ${response}`);
   })
   .catch(error => {
-    logger.error(`[ERROR] Slack post to ${channel}: ${error}`);
+    log.error(`Slack post to ${config.slackChannel}: ${error}`);
   });
-
-/**
- * read config from file
- */
-function loadConfig() {
-  // load the config file, or log an error and quit
-  try {
-    raslackConfig = JSON.parse(fs.readFileSync(raslackConfigFilePath).toString());
-  } catch (e) {
-    logger.error(`Caught an error trying to open and parse your config file at ${raslackConfigFilePath}`);
-    logger.error(e);
-    process.exit(-1);
-  }
-  // load the account passed via cmd line param, or load the first in the config
-  try {
-    channel = argv.channel || raslackConfig.default_channel;
-  } catch (e) {
-    logger.error(`Caught an error trying to set a Slack channel for posting.`);
-    logger.error(e);
-    process.exit(-1);
-  }
-  // get the webhook for the chosen channel
-  try {
-    webhook = raslackConfig.channels[channel];
-  } catch (e) {
-    console.log(webhook);
-    logger.error(`Caught an exception trying to get the webhook for channel ${channel}`);
-    logger.error(e);
-    process.exit(-1);
-  }
-}

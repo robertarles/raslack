@@ -20,7 +20,8 @@
     "minimist": "^1.2.0",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
-    "winston": "^3.0.0-rc1"
+    "winston": "^3.0.0-rc1",
+    "winston-mongodb": "^4.0.0-rc1"
   },
   "bin": {
     "raslack": "raslack"
