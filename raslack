@@ -28,11 +28,13 @@ const {
 
 // make sure that the caller specified an account and channel (e.g. '-channel accountname.channelname')
 let channel;
-try {
-  channel = argv.channel ? argv.channel : argv.c;
-} catch (e) {
-  log.error(`Failed getting account and channel for posting. Did you pass them?\n ${e}`);
-  process.exit(-1);
+if (argv.c || argv.channel) {
+  try {
+    channel = argv.channel ? argv.channel : argv.c;
+  } catch (e) {
+    log.error(`Failed getting account and channel for posting. Did you pass them?\n ${e}`);
+    process.exit(-1);
+  }
 }
 
 // load the config file

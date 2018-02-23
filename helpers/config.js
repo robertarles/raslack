@@ -21,7 +21,11 @@ function loadConfig(raslackConfigFilePath, channel) {
     }
     // load the account passed via cmd line param, or load the first in the config
     try {
-        [config.slackAccount, config.slackChannel] = channel.split('.') || config.default_channel;
+        if (channel) {
+            [config.slackAccount, config.slackChannel] = channel.split('.')
+        } else {
+            [config.slackAccount, config.slackChannel] = config.default_channel.split('.');
+        }
     } catch (e) {
         log.error(`Caught an error trying to set a Slack channel for posting.`);
         log.error(e);
