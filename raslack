@@ -6,7 +6,7 @@ const os = require('os');
 const rp = require('request-promise');
 const argv = require('minimist')(process.argv.slice(2));
 
-
+// setup a help message with all params we handle
 let helpMessage = `
 --channel | -c    account and channel to send to. e.g. accountNema.channelName
 --text    | -t    the text of the slack message to send
@@ -18,13 +18,15 @@ if (argv.help || argv.h) {
   process.exit(0);
 }
 
+// load our helpers
 const {
   loadConfig
-} = require('./utils/config');
+} = require('./helpers/config');
 const {
   log
-} = require('./utils/logger');
+} = require('./helpers/logger');
 
+// make sure that the caller specified an account and channel (e.g. '-channel accountname.channelname')
 let channel;
 try {
   channel = argv.channel ? argv.channel : argv.c;
