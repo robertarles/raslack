@@ -3,8 +3,10 @@
 'use strict';
 const fs = require('fs');
 const os = require('os');
-const rp = require('request-promise');
 const argv = require('minimist')(process.argv.slice(2));
+const slack = require('./slack');
+const cfg = require('./helpers/config');
+const log = require('./helpers/log');
 
 // setup a help message with all params we handle
 let helpMessage = `
@@ -18,14 +20,6 @@ if (argv.help || argv.h) {
   process.exit(0);
 }
 
-// load our helpers
-const {
-  loadConfig
-} = require('./helpers/config');
-const {
-  log
-} = require('./helpers/logger');
-
 // make sure that the caller specified an account and channel (e.g. '-channel accountname.channelname')
 let channel;
 if (argv.c || argv.channel) {
@@ -37,55 +31,10 @@ if (argv.c || argv.channel) {
   }
 }
 
-// load the config file
-let configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
-let config = loadConfig(configFilePath, channel);
+const configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
 
-let slackPostBody = {};
+// get config, setup postbody, post
+let config = cfg.load(configFilePath, channel);
+let slackPostBody = slack.createPostBody(argv, config);
 
-// set either the JSON payload, or the text of the JSON payload
-if (argv.json) {
-  try {
-    slackPostBody = JSON.parse(argv.json);
-  } catch (e) {
-    log.error(`Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
-    process.exit(-1);
-  }
-} else if (argv.text || argv.t) {
-  try {
-    slackPostBody = {
-      text: argv.text ? argv.text : argv.t
-    };
-  } catch (e) {
-    log.error(`Caught an error processing text message\n ${e.message}`);
-    process.exit(-1);
-  }
-}
-
-// If we fell through, past the above 'if' conditions, then we failed to set a payload for the slack POST
-if (slackPostBody === undefined) {
-  log.error('You must pass, at least, text\n e.g. `raslack --text "some message"`');
-  process.exit(-1);
-}
-
-// set some defaults
-if (!slackPostBody.username) slackPostBody.username = 'raslack';
-if (!slackPostBody.icon_emoji) slackPostBody.icon_emoji = ':gear:';
-
-
-// prepare options and POST to the slack webhook from the config file
-let slackPostOptions = {
-  method: 'POST',
-  url: config.webhook,
-  body: slackPostBody,
-  json: true
-};
-
-rp
-  .post(slackPostOptions)
-  .then(response => {
-    log.info(`Slack response from post to ${config.slackChannel}: ${response}`);
-  })
-  .catch(error => {
-    log.error(`Slack post to ${config.slackChannel}: ${error}`);
-  });
+slack.post(slackPostBody, config)
