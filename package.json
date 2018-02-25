@@ -2,7 +2,7 @@
   "name": "raslack",
   "version": "1.0.13",
   "description": "ability to simple send slack messages via webhook",
-  "main": "raslack",
+  "main": "slack.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
