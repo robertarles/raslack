@@ -36,7 +36,7 @@ function post(slackPostBody) {
 /**
  * Create a post body based on cmd line params and config
  * @param opts object of options for posting:
- * {text: 'some message', username: 'balderdash', icon_emoji: ':robot_face'}
+ * {text: 'some message' [, username: 'balderdash'] [, icon_emoji: ':robot_face']}
  * OR
  * {json: [manually constructed json object. See slack docs for format}]}
  */
@@ -44,7 +44,8 @@ function createPostBody(opts, cfg) {
     if (cfg) {
         config = cfg;
     }
-    // make sure that the caller specified an account and channel (e.g. '-channel accountname.channelname')
+    // if the caller specified an account and channel (e.g. '-channel accountname.channelname')
+    // else we try the defaults from the config file
     let channel;
     if (opts.c || opts.channel) {
         try {
@@ -70,14 +71,24 @@ function createPostBody(opts, cfg) {
             log.error(`Caught an error trying to parse the passed JSON parameter \n ${e.message}`);
             process.exit(-1);
         }
-    } else if (opts.text || opts.t) {
-        try {
-            slackPostBody = {
-                text: opts.text ? opts.text : opts.t
-            };
-        } catch (e) {
-            log.error(`Caught an error processing text message\n ${e.message}`);
-            process.exit(-1);
+        // section for the case where JSON was not sent
+    } else {
+        if (opts.text || opts.t) {
+            try {
+                slackPostBody = {
+                    text: opts.text ? opts.text : opts.t
+                };
+            } catch (e) {
+                log.error(`Caught an error setting the text message\n ${e.message}`);
+                process.exit(-1);
+            }
+        }
+        if (opts.username) {
+            try {
+                slackPostBody.username = opts.username
+            } catch (e) {
+                log.error(`Caught an error setting the username\n ${e.message}`)
+            }
         }
     }
 
@@ -90,7 +101,7 @@ function createPostBody(opts, cfg) {
     if (config.username && !slackPostBody.username) {
         slackPostBody.username = config.username;
     }
-    // if we have an icon in the confi, and NOT from a optional JSON param
+    // if we have an icon in the config, and NOT from a optional JSON param
     if (config.icon_emoji && !slackPostBody.icon_emoji) {
         slackPostBody.icon_emoji = config.icon_emoji;
     }

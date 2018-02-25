@@ -4,16 +4,23 @@
 const argv = require('minimist')(process.argv.slice(2));
 const slack = require('./slack');
 const log = require('./helpers/log');
-
+console.log(require('util').inspect(process, false, 4))
 // setup a help message with all params we handle
 let helpMessage = `
 --channel | -c    account and channel to send to. e.g. accountNema.channelName
 --text    | -t    the text of the slack message to send
+--icon            icon_emoji to show in slack post
+--username        username to show in slack post (arbitrary, not related to logon)
 --json            text representation of a slack message body to send. See slack docs for format
 --help    | -g    this help message.
+--version | -v    raslack version information
 `
 if (argv.help || argv.h) {
   console.log(helpMessage);
+  process.exit(0);
+}
+if (argv.version || argv.h) {
+  console.log(vertionsMessage);
   process.exit(0);
 }
 
