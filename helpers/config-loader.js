@@ -44,9 +44,7 @@ function load(raslackConfigFilePath, channel) {
         process.exit(-1);
     }
     // set the 'post as' username. this is NOT a login, just a chat handle
-    if (opts.username) {
-        config.username = opts.username
-    } else if (config.accounts[config.slackAccount].username) {
+    if (config.accounts[config.slackAccount].username) {
         config.username = config.accounts[config.slackAccount].username;
     }
     // set the icon/avatar to use for posting
