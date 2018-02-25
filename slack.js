@@ -1,39 +1,64 @@
 'use strict';
-const rp = require('request-promise');
+const configLoader = require('./helpers/config-loader');
 const log = require('./helpers/log');
+const rp = require('request-promise');
+const fs = require('fs');
+const os = require('os');
+
+// config to be used by this module. setup in or passed into createPostBody()
+let config;
 
 /**
  * Post to slack
  * @param slackPostBody built by setPostBody(opts) call
- * @param config loaded from cfg.load(cfgfile, channel) call
  */
-function post(slackPostBody, config) {
+function post(slackPostBody) {
     // prepare options and POST to the slack webhook from the config file
     let slackPostOptions = {
         method: 'POST',
         url: config.webhook,
         body: slackPostBody,
+        requestFullResponse: true,
         json: true
     };
 
     rp
         .post(slackPostOptions)
         .then(response => {
-            log.info(`Slack response from post to ${config.slackChannel}: ${response}`);
+            log.info(`Slack post response: ${response}`);
         })
         .catch(error => {
-            log.error(`Slack post to ${config.slackChannel}: ${error}`);
+            log.error(`Slack error: ${error}`);
+            log.debug(`${error}`);
         });
 }
 
 /**
- * 
+ * Create a post body based on cmd line params and config
  * @param opts object of options for posting:
  * {text: 'some message', username: 'balderdash', icon_emoji: ':robot_face'}
  * OR
  * {json: [manually constructed json object. See slack docs for format}]}
  */
-function createPostBody(opts, config) {
+function createPostBody(opts, cfg) {
+    if (cfg) {
+        config = cfg;
+    }
+    // make sure that the caller specified an account and channel (e.g. '-channel accountname.channelname')
+    let channel;
+    if (opts.c || opts.channel) {
+        try {
+            channel = opts.channel ? opts.channel : opts.c;
+        } catch (e) {
+            log.error(`Failed getting account and channel for posting. Did you pass them?\n ${e}`);
+            process.exit(-1);
+        }
+    }
+    // if no custom config was passed in, read the default config file
+    if (!config) {
+        const configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
+        config = configLoader.load(configFilePath, channel);
+    }
     //
     // set either the JSON payload, or the text of the JSON payload
     //

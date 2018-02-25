@@ -1,11 +1,8 @@
 #!/usr/bin/env node
 
 'use strict';
-const fs = require('fs');
-const os = require('os');
 const argv = require('minimist')(process.argv.slice(2));
 const slack = require('./slack');
-const cfg = require('./helpers/config');
 const log = require('./helpers/log');
 
 // setup a help message with all params we handle
@@ -20,21 +17,6 @@ if (argv.help || argv.h) {
   process.exit(0);
 }
 
-// make sure that the caller specified an account and channel (e.g. '-channel accountname.channelname')
-let channel;
-if (argv.c || argv.channel) {
-  try {
-    channel = argv.channel ? argv.channel : argv.c;
-  } catch (e) {
-    log.error(`Failed getting account and channel for posting. Did you pass them?\n ${e}`);
-    process.exit(-1);
-  }
-}
-
-const configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
-
-// get config, setup postbody, post
-let config = cfg.load(configFilePath, channel);
-let slackPostBody = slack.createPostBody(argv, config);
-
-slack.post(slackPostBody, config)
+// setup postbody, post, let config be handled by default process
+let slackPostBody = slack.createPostBody(argv);
+slack.post(slackPostBody);

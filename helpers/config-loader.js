@@ -17,6 +17,8 @@ function load(raslackConfigFilePath, channel) {
         log.error(e);
         process.exit(-1);
     }
+    // store the channel in the config
+    config.channel = channel;
     // load the account passed via cmd line param, or load the first in the config
     try {
         if (channel) {
