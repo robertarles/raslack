@@ -24,5 +24,5 @@ if (argv.version || argv.h) {
 }
 
 // setup postbody, post, let config be handled by default process
-let slackPostBody = slack.createPostBody(argv);
+let slackPostBody = slack.setPostBodyDefaults(argv);
 slack.post(slackPostBody);

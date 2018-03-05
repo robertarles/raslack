@@ -6,18 +6,22 @@ const fs = require('fs');
 const os = require('os');
 
 // config to be used by this module. setup in or passed into createPostBody()
+const configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
 let config;
 
 /**
- * Post to slack
- * @param slackPostBody built by setPostBody(opts) call
+ * Post to slack. post body is defined here https://api.slack.com/incoming-webhooks  
+ * @param postBody a JSON object with *at least* a text property. All others optional 
+ * and are defined in the config file.
+ * 
  */
-function post(slackPostBody) {
+function post(postBody, cfg) {
+    let fullPostbody = setPostBodyDefaults(postBody, cfg);
     // prepare options and POST to the slack webhook from the config file
     let slackPostOptions = {
         method: 'POST',
         url: config.webhook,
-        body: slackPostBody,
+        body: postBody,
         requestFullResponse: true,
         json: true
     };
@@ -34,13 +38,13 @@ function post(slackPostBody) {
 }
 
 /**
- * Create a post body based on cmd line params and config
+ * Fill in the post body based on cmd line params and config
  * @param opts object of options for posting:
  * {text: 'some message' [, username: 'balderdash'] [, icon_emoji: ':robot_face']}
  * OR
  * {json: [manually constructed json object. See slack docs for format}]}
  */
-function createPostBody(opts, cfg) {
+function setPostBodyDefaults(opts, cfg) {
     if (cfg) {
         config = cfg;
     }
@@ -57,7 +61,6 @@ function createPostBody(opts, cfg) {
     }
     // if no custom config was passed in, read the default config file
     if (!config) {
-        const configFilePath = `${os.homedir()}/.raslack/slackConfig.json`;
         config = configLoader.load(configFilePath, channel);
     }
     //
@@ -83,12 +86,13 @@ function createPostBody(opts, cfg) {
                 process.exit(-1);
             }
         }
+        // if a username was passed in via the option
         if (opts.username) {
-            try {
-                slackPostBody.username = opts.username
-            } catch (e) {
-                log.error(`Caught an error setting the username\n ${e.message}`)
-            }
+            slackPostBody.username = opts.username
+        }
+        // if an icon was passed in via the options
+        if (opts.icon_emoji) {
+            slackPostBody.icon_emoji = opts.icon_emoji
         }
     }
 
@@ -113,4 +117,4 @@ function createPostBody(opts, cfg) {
 }
 
 exports.post = post;
-exports.createPostBody = createPostBody;
+exports.setPostBodyDefaults = setPostBodyDefaults;
