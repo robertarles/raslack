@@ -20,7 +20,7 @@ function post(postBody, cfg) {
         config = cfg;
     }    // if no custom config was passed in, read the default config file
     if (!config) {
-        config = configLoader.load(configFilePath, channel);
+        config = configLoader.load(configFilePath);
     }
 
     let fullPostbody = setPostBodyDefaults(postBody, cfg);
