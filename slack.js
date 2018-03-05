@@ -18,18 +18,11 @@ let config;
 function post(postBody, cfg) {
     if (cfg) {
         config = cfg;
+    }    // if no custom config was passed in, read the default config file
+    if (!config) {
+        config = configLoader.load(configFilePath, channel);
     }
-    // if the caller specified an account and channel (e.g. '-channel accountname.channelname')
-    // else we try the defaults from the config file
-    let channel;
-    if (opts.c || opts.channel) {
-        try {
-            channel = opts.channel ? opts.channel : opts.c;
-        } catch (e) {
-            log.error(`Failed getting account and channel for posting. Did you pass them?\n ${e}`);
-            process.exit(-1);
-        }
-    }
+
     let fullPostbody = setPostBodyDefaults(postBody, cfg);
     // prepare options and POST to the slack webhook from the config file
     let slackPostOptions = {
