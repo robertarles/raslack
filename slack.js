@@ -123,7 +123,7 @@ function setPostBodyDefaults(opts, cfg) {
     }
     // set some defaults if needed
     if (!slackPostBody.username) slackPostBody.username = 'raslack';
-    if (!slackPostBody.icon_emoji) slackPostBody.icon_emoji = ':gear:';
+    if (!slackPostBody.icon_emoji && !slackPostBody.icon_url) slackPostBody.icon_emoji = ':gear:';
 
     return (slackPostBody);
 }
