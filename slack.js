@@ -97,8 +97,10 @@ function setPostBodyDefaults(opts, cfg) {
         if (opts.username) {
             slackPostBody.username = opts.username
         }
-        // if an icon was passed in via the options
-        if (opts.icon_emoji) {
+        // if an icon was passed in via the options (icon overrides emoji)
+        if (opts.icon_url){
+            slackPostBody.icon_url = opts.icon_url;
+        } else if (opts.icon_emoji) {
             slackPostBody.icon_emoji = opts.icon_emoji
         }
     }
@@ -113,7 +115,10 @@ function setPostBodyDefaults(opts, cfg) {
         slackPostBody.username = config.username;
     }
     // if we have an icon in the config, and NOT from a optional JSON param
-    if (config.icon_emoji && !slackPostBody.icon_emoji) {
+    if (slackPostBody.icon_url){
+        // do nothing
+        // already using an icon url, don't use an emoji!
+    } else if (config.icon_emoji && !slackPostBody.icon_emoji) {
         slackPostBody.icon_emoji = config.icon_emoji;
     }
     // set some defaults if needed
